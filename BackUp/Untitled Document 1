@@ -1,0 +1,117 @@
+80 (HTTP) 
+
+Docker -> NAT (Network Address Translation) -> 5000 : 192.168.1.3; localhost:5000 : container:80 (Python Server)
+
+Python Server (localhost:5000/hello, "/hello" -> mycoolfunction (Return Statement "I'm printing + path")
+			<-					<-
+560085 -> PES University
+
+docker run -it --rm -p 5000:80 -p 6000:6000 -p 6001:6001 real_vs
+    1  apt updae
+    2  apt update
+    3  apt install python3
+    4  apt install python3-pip
+    5  python3 -m http.server
+    6  python3 -m http.server -p 80
+    7  python3 -m http.server 80
+    8  apt install nano
+    9  nano server.py
+   10  nano mycoolcommand.py
+   11  nano server.py
+   12  mv server.py server1.py 
+   13  nano server.py
+   14  python3 server.py 
+   15  python3 server.py 80
+   16  nano server.py
+   17  ls
+   18  nano mycoolcommand.py 
+   19  nano server.py
+   20  python3 server.py 80
+   21  nano server.py
+   22  python3 server.py 80
+   23  nano mycoolcommand.py 
+   24  python3 server.py 80
+   25  nano mycoolcommand.py 
+   26  python3 server.py 80
+   27  nano mycoolcommand.py 
+   28  python3 server.py 80
+   29  nano mycoolcommand.py 
+   30  python3
+   31  nano mycoolcommand.py 
+   32  python3
+   33  python3 server.py 80
+   34  nano mycoolcommand.py 
+   35  python3 server.py 80
+   36  nano server.py
+   37  python3 server.py 80
+   38  nano server.py
+   39  ls
+   40  nano server.py
+   41  python3 server.py 80
+   42  nano server.py
+   43  python3 server.py 80
+   44  nano server.py
+   45  history
+   
+   nano mycoolcommand.py 
+   def printcommand(a):
+    print(a)
+    b = str("I'm printing" + a)
+    return str(b)
+    
+    
+    **88  ps -ef | grep "python3"
+    
+    #!/usr/bin/env python3
+"""
+Very simple HTTP server in python for logging requests
+Usage::
+    ./server.py [<port>]
+"""
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import logging
+from mycoolcommand import *
+
+class S(BaseHTTPRequestHandler):
+    def _set_response(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
+    def do_GET(self):
+        logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
+        self._set_response()
+        a = printcommand(self.path)
+        self.wfile.write(a.encode('utf-8'))
+
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
+        post_data = self.rfile.read(content_length) # <--- Gets the data itself
+        logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
+                str(self.path), str(self.headers), post_data.decode('utf-8'))
+
+        self._set_response()
+        self.wfile.write("POST request for {}".format(self.path).encode('utf-8'))
+
+def run(server_class=HTTPServer, handler_class=S, port=8080):
+    logging.basicConfig(level=logging.INFO)
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    logging.info('Starting httpd...\n')
+    try:
+        httpd.serve_forever()
+        except KeyboardInterrupt:
+        pass
+    httpd.server_close()
+    logging.info('Stopping httpd...\n')
+
+if __name__ == '__main__':
+    from sys import argv
+
+    if len(argv) == 2:
+        run(port=int(argv[1]))
+    else:
+        run()
+
+
+

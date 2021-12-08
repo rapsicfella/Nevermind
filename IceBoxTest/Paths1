@@ -1,0 +1,63 @@
+//server
+//demo
+g++ -fPIC -I. -DICE_CPP11_MAPPING HelloI.cpp HelloServiceI.cpp Hello.cpp -shared -o libHelloService++11.so -pthread -lIceBox++11 -lIce++11
+//vs
+g++ -fPIC -I. -DICE_CPP11_MAPPING HelloI.cpp HelloServiceI.cpp Hello.cpp -shared -o libHelloService++11.so -pthread -lIceBox++11 -lIce++11
+
+g++ -fPIC -I/home/harsha/opencv_build/install/include/opencv4/ -I/home/harsha/OpenDDS/ -I/home/harsha/OpenDDS/ACE_wrappers/ -I/home/harsha/OpenDDS/ACE_wrappers/TAO/ -I/home/harsha/OpenDDS/ACE_wrappers/TAO/tao/ -I. -DICE_CPP11_MAPPING VStest.cpp VStestI.cpp VStestServiceI.cpp MessengerTypeSupportImpl.cpp MessengerC.cpp MessengerTypeSupportC.cpp -L. -L/home/harsha/OpenDDS/ACE_wrappers/TAO/tao/ -L/home/harsha/OpenDDS/DevGuideExamples/FACE/Simple -L/usr/lib/x86_64-linux-gnu/ -L/home/harsha/OpenDDS/lib/ -L/home/harsha/OpenDDS/bin/ -L/home/harsha/opencv_build/install/lib/ -L/home/harsha/opencv_build/install/lib/cmake/opencv4/ -L/home/harsha/OpenDDS/cmake/ -L/home/harsha/OpenDDS/ACE_wrappers/lib/ -L/home/harsha/OpenDDS/ACE_wrappers/bin/ -L/home/harsha/OpenDDS/ACE_wrappers/TAO/ -g -shared -o libVStestService++11.so -lIce++11 -lIceBox++11 -lOpenDDS_Dcps -lOpenDDS_InfoRepoDiscovery -lOpenDDS_Tcp -lOpenDDS_Rtps -lOpenDDS_Rtps_Udp -lTAO_PortableServer -lTAO_BiDirGIOP -lTAO_PI -lTAO_CodecFactory -lTAO_AnyTypeCode -lTAO -lACE -lopencv_highgui -lopencv_videostab -lopencv_videoio -lopencv_video -lopencv_core -lopencv_imgcodecs -lFaceMessenger_Idl -pthread
+===========================================================
+//client
+//demo
+g++ -I. -DICE_CPP11_MAPPING Hello.cpp Client.cpp -L. -o client -lIce++11 -pthread
+
+//vs
+g++ -I. -DICE_CPP11_MAPPING VStest.cpp Client.cpp -L. -o client -lIce++11 -pthread
+
+//vssub
+g++ -I/home/harsha/opencv_build/install/include/opencv4/ -I/home/harsha/OpenDDS/ -I/home/harsha/OpenDDS/ACE_wrappers/ -I/home/harsha/OpenDDS/ACE_wrappers/TAO/ -I/home/harsha/OpenDDS/ACE_wrappers/TAO/tao/ -I. Sub.cpp MessengerTypeSupportImpl.cpp MessengerC.cpp MessengerTypeSupportC.cpp DataReaderListenerImpl.cpp -L. -L/home/harsha/OpenDDS/ACE_wrappers/TAO/tao/ -L/home/harsha/OpenDDS/DevGuideExamples/FACE/Simple -L/usr/lib/x86_64-linux-gnu/ -L/home/harsha/OpenDDS/lib/ -L/home/harsha/OpenDDS/bin/ -L/home/harsha/opencv_build/install/lib/ -L/home/harsha/opencv_build/install/lib/cmake/opencv4/ -L/home/harsha/OpenDDS/cmake/ -L/home/harsha/OpenDDS/ACE_wrappers/lib/ -L/home/harsha/OpenDDS/ACE_wrappers/bin/ -L/home/harsha/OpenDDS/ACE_wrappers/TAO/ -g -o sub -lOpenDDS_Dcps -lOpenDDS_InfoRepoDiscovery -lOpenDDS_Tcp -lOpenDDS_Rtps -lOpenDDS_Rtps_Udp -lTAO_PortableServer -lTAO_BiDirGIOP -lTAO_PI -lTAO_CodecFactory -lTAO_AnyTypeCode -lTAO -lACE -lopencv_highgui -lopencv_videostab -lopencv_videoio -lopencv_video -lopencv_core -lopencv_imgcodecs -lFaceMessenger_Idl -lpthread
+
+=============================================================
+
+mkdir -p IceBox/hello/generated
+
+mkdir -p IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService
+
+mkdir -p IceBox/hello/build/x86_64-linux-gnu/shared/pie
+
+rm -f IceBox/hello/generated/Hello.h IceBox/hello/generated/Hello.cpp
+
+/usr/bin/slice2cpp -I/usr/share/ice/slice -IIceBox/hello --depend IceBox/hello/Hello.ice | sed 's|\(.*:\)|IceBox/hello/generated/Hello.h IceBox/hello/generated/Hello.cpp:|' > IceBox/hello/generated/Hello.ice.d
+
+/usr/bin/slice2cpp -I/usr/share/ice/slice -IIceBox/hello --output-dir IceBox/hello/generated IceBox/hello/Hello.ice
+
+x86_64-linux-gnu-g++  -MT IceBox/hello/build/x86_64-linux-gnu/shared/pie/Hello.o -MMD -MP -MF  IceBox/hello/build/x86_64-linux-gnu/shared/pie/Hello.Td -Wall -Wextra -Wredundant-decls -Wshadow -Wdeprecated -Werror -pthread -g -DICE_CPP11_MAPPING -std=c++11 -IIceBox/hello -IIceBox/hello/generated -fPIE -fvisibility=hidden  -c IceBox/hello/generated/Hello.cpp -o IceBox/hello/build/x86_64-linux-gnu/shared/pie/Hello.o
+
+mv -f  IceBox/hello/build/x86_64-linux-gnu/shared/pie/Hello.Td  IceBox/hello/build/x86_64-linux-gnu/shared/pie/Hello.cpp.d
+
+x86_64-linux-gnu-g++  -MT IceBox/hello/build/x86_64-linux-gnu/shared/pie/Client.o -MMD -MP -MF  IceBox/hello/build/x86_64-linux-gnu/shared/pie/Client.Td -Wall -Wextra -Wredundant-decls -Wshadow -Wdeprecated -Werror -pthread -g -DICE_CPP11_MAPPING -std=c++11 -IIceBox/hello -IIceBox/hello/generated -fPIE -fvisibility=hidden  -c IceBox/hello/Client.cpp -o IceBox/hello/build/x86_64-linux-gnu/shared/pie/Client.o
+
+mv -f  IceBox/hello/build/x86_64-linux-gnu/shared/pie/Client.Td  IceBox/hello/build/x86_64-linux-gnu/shared/pie/Client.cpp.d
+mkdir -p IceBox/hello
+
+x86_64-linux-gnu-g++  -o IceBox/hello/client  IceBox/hello/build/x86_64-linux-gnu/shared/pie/Hello.o IceBox/hello/build/x86_64-linux-gnu/shared/pie/Client.o -pthread -pie -Wl,--disable-new-dtags  -lIce++11  
+
+
+
+
+x86_64-linux-gnu-g++  -MT IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/Hello.o -MMD -MP -MF  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/Hello.Td -Wall -Wextra -Wredundant-decls -Wshadow -Wdeprecated -Werror -pthread -g -DICE_CPP11_MAPPING -std=c++11 -IIceBox/hello -IIceBox/hello/generated -fPIC -fvisibility=hidden  -c IceBox/hello/generated/Hello.cpp -o IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/Hello.o
+
+mv -f  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/Hello.Td  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/Hello.cpp.d
+
+x86_64-linux-gnu-g++  -MT IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloServiceI.o -MMD -MP -MF  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloServiceI.Td -Wall -Wextra -Wredundant-decls -Wshadow -Wdeprecated -Werror -pthread -g -DICE_CPP11_MAPPING -std=c++11 -IIceBox/hello -IIceBox/hello/generated -fPIC -fvisibility=hidden  -c IceBox/hello/HelloServiceI.cpp -o IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloServiceI.o
+
+mv -f  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloServiceI.Td  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloServiceI.cpp.d
+
+x86_64-linux-gnu-g++  -MT IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloI.o -MMD -MP -MF  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloI.Td -Wall -Wextra -Wredundant-decls -Wshadow -Wdeprecated -Werror -pthread -g -DICE_CPP11_MAPPING -std=c++11 -IIceBox/hello -IIceBox/hello/generated -fPIC -fvisibility=hidden  -c IceBox/hello/HelloI.cpp -o IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloI.o
+
+mv -f  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloI.Td  IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloI.cpp.d
+mkdir -p IceBox/hello
+
+x86_64-linux-gnu-g++ -shared  -o IceBox/hello/libHelloService++11.so IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/Hello.o IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloServiceI.o IceBox/hello/build/x86_64-linux-gnu/shared/pic/HelloService/HelloI.o  -pthread -Wl,--no-undefined -lIceBox++11 -lIce++11 
+
+
+x86_64-linux-gnu-g++ -shared  -o libHelloService++11.so Hello.o HelloServiceI.o HelloI.o  -pthread -Wl,--no-undefined -lIceBox++11 -lIce++11 

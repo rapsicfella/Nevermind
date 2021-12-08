@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=VS
+Comment=VS app
+Exec=/home/harsha/Desktop/Videostreaming_v1/VS_script.sh
+Icon=/home/harsha/Pictures/icon.png
+Terminal=true
+Type=Application

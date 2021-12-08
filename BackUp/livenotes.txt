@@ -1,0 +1,75 @@
+docker run -it -v --name integration /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=unix$DISPLAY vsonpy
+
+
+5000 - VS
+5002 - OTA , pub 6002, sub 6003
+
+
+
+5003 - OD
+
+701 281 362 - natarajan
+451 843 993 - wipod@321
+
+ssh nvidia@192.168.0.104 - Wipro123
+
+
+http blog
+https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa
+
+
+
+----------------------Install Ice for Ubuntu 20.04----------------------
+-----Basic
+
+	sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv B6391CB2CFBA643D
+	sudo apt-add-repository -s "deb http://zeroc.com/download/Ice/3.7/ubuntu`lsb_release -rs` stable main"
+	sudo apt-get update
+	sudo apt-get install zeroc-ice-all-runtime zeroc-ice-all-dev
+
+-----Install Slice compilers
+
+	sudo apt-get install zeroc-ice-compilers
+
+-----Install Ice for Python 3
+
+	sudo apt-get install python3-zeroc-ice
+
+-----Install Ice for C++
+
+	sudo apt-get install libzeroc-ice-dev libzeroc-ice3.7
+
+-----Install IceBox for C++
+
+	sudo apt-get install zeroc-icebox
+===========================================================================================================================================================================================================ISTIO:
+
+1. Istio can run alongside with the kubernetes cluster and help you manage your microservices.
+
+2. Istio, by default blocks all traffic going out of your cluster. It is good for security reasons. ie, you dont want your app talking to random end points on the internet. Istio will be able to         lockdown and only talk to trusted endpoints using egress rules(few lines of YAML).
+
+3. Istio will autmaticatically retry the requests as many times as we want before giving up - Istio will transparantly do manage all these network calls automatically.
+
+4. USE - istioctl (like kubectl).
+
+5. K8s will defaultly use round robin load balancing for its services(ie, it'll bindly send traffic to its pods). *with Istio we can exatly make traffic go where we want(ie,A specific version for specific pod).
+
+6. Istio will be able to create a full picture of our services (ie, which is talking to which like that). We can also get metrics(ie,volume, latency ) from cluster as well which will be shown on dashboard to understand what is going on on our services.
+
+7. We can use something like zipkin or jaeger to do tracing (ie, communication time and info of microservices). To do this we have to include the trace headers in yaml file.
+
+8. Istio simply reduces the work of a developer.
+
+9. We can also do in-production testing using istio (ie, to separatly test a new version of production alongside the current version without any traffic hitting) ie, canary routing, the super-secret traffic like we mentioned in yaml goes to canary service. we can route to 900th service in 2000 services using istio by propagating the headers.
+
+10. Others:
+Request routing
+Fault injection
+Traffic shifting
+Querying metrics
+Visualizing metrics
+Accessing external services
+Visualizing your mesh
+
+Focussed canary testing:
+As mentioned above, the Istio routing rules can be used to route traffic based on specific criteria, allowing more sophisticated canary deployment scenarios. Say, for example, instead of exposing the canary to an arbitrary percentage of users, we want to try it out on internal users, maybe even just a percentage of them. The following command could be used to send 50% of traffic from users at some-company-name.com to the canary version, leaving all other users unaffected.

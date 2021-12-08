@@ -1,0 +1,23 @@
+total 808
+drwxrwxr-x  3 harsha harsha   4096 Nov 17 16:42 .
+drwxr-xr-x 37 harsha harsha   4096 Nov 17 16:31 ..
+drwxrwxr-x  2 harsha harsha   4096 Sep 28 17:45 certs
+-rwxrwxr-x  1 harsha harsha 384552 Nov 12 15:09 client
+-rw-rw-r--  1 harsha harsha   1123 Nov 12 15:05 Client.cpp
+-rw-rw-r--  1 harsha harsha    152 Nov  4 11:59 config.admin
+-rw-rw-r--  1 harsha harsha    884 Nov  4 12:02 config.client
+-rw-rw-r--  1 harsha harsha    648 Nov  8 15:11 config.icebox
+-rw-rw-r--  1 harsha harsha    928 Nov  4 12:03 config.service
+-rw-rw-r--  1 harsha harsha      0 Nov 17 16:42 file.txt
+-rw-rw-r--  1 harsha harsha   1634 Nov  3 17:24 http_server.cpp
+-rwxrwxr-x  1 harsha harsha 334864 Nov 17 15:10 libVSService++11.so
+-rw-rw-r--  1 harsha harsha   7081 Nov 12 15:34 Paths1
+-rw-rw-r--  1 harsha harsha    545 Nov  4 12:12 README.md
+-rwxrwxr-x  1 harsha harsha     37 Nov 17 16:42 testscript.sh
+-rw-rw-r--  1 harsha harsha   9049 Nov  4 11:36 VS.cpp
+-rw-rw-r--  1 harsha harsha  17724 Nov  4 11:36 VS.h
+-rw-rw-r--  1 harsha harsha    175 Nov  4 11:34 VS.ice
+-rw-rw-r--  1 harsha harsha   1444 Nov 12 15:13 VSI.cpp
+-rw-rw-r--  1 harsha harsha    241 Nov  4 12:11 VSI.h
+-rw-rw-r--  1 harsha harsha    874 Nov 17 15:10 VSServiceI.cpp
+-rw-rw-r--  1 harsha harsha    463 Nov  4 12:04 VSServiceI.h

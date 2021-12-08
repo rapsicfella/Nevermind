@@ -1,0 +1,29 @@
+cd pyopendds-dev_DataListener/
+pip install .
+python3 //check version (>3.7 recommended)
+cd tests/videostreaming/
+sudo rm -rf build
+mkdir build && cd build
+cmake ..
+make
+itl2py -o basic_output basic_idl basic.itl
+cd basic_output
+basic_idl_DIR=$(realpath ..) pip install .
+cd ../..
+pip3 uninstall opencv-python
+pip install opencv-python-headless
+sudo apt-get install python3-pyqt5
+//setup done
+
+cd /tests/VS-py-Ice 
+//open in terminal
+$python3 Server.py
+//in 2nd terminal 
+$python3 Client.py
+
+
+//Running native ui for VideoStreaming
+cd cd native_v0.3_1/
+$python3 nativeSdv.py
+
+
