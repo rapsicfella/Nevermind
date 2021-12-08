@@ -1,0 +1,100 @@
+# Last updated 02-11-21 : 01.53PM
+
+In the IVI_UI folder, do the following to bringup UI.
+
+native ui:
+----------
+Install opendds if not present, else source opendds.
+
+//installing OpenDDS
+wget https://download.objectcomputing.com/OpenDDS/OpenDDS-3.18.1.tar.gz
+tar -xvf OpenDDS-3.18.1.tar.gz
+rm OpenDDS-3.18.1.tar.gz
+mv OpenDDS-3.18.1 OpenDDS
+cd OpenDDS && ./configure && make -j3
+
+
+#############(**The below steps are only for HVAC and skip for other apps**)##########
+	1. Install boost with ./install_boost.sh script
+	(If the script fails, please see the script and run commands manually)
+
+	2.compile -> hvac backend for ui (cmake file updated here )
+		cd /IVI_UI/nativeUI	
+		cmake . && make -j4
+######################################################################################
+
+For UI Pub and Sub:
+-------------------
+
+install python3.8 python3.8-dev
+	sudo apt install python3.8 python3.8-dev
+
+update python3.8 pip
+	python3.8 -m pip install --upgrade pip
+
+Install latest cmake:
+--------------------
+
+sudo dpkg -P cmake
+
+#Cmake 3.21.2 Installation
+wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
+sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+sudo apt update
+sudo apt install cmake -y
+
+
+Install Ice for Ubuntu 18.04:
+-----------------------------
+
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv B6391CB2CFBA643D
+sudo apt-add-repository "deb http://zeroc.com/download/ice/3.7/ubuntu18.04 stable main"
+sudo apt-get update
+sudo apt install libssl-dev
+sudo apt-get install python3-zeroc-ice
+sudo apt-get install zeroc-ice-compilers
+sudo apt install libbz2-dev
+sudo apt install zeroc-ice-all-runtime zeroc-ice-all-dev
+
+create python venv:
+-------------------
+
+ sudo apt install python3.8-venv
+ python3.8 -m venv pydds  (**pydds is the environment name here and can be changed to different if needed**)
+
+ source pydds/bin/activate		##
+	pip install --upgrade pip
+	pip install wheel numpy opencv-python-headless 
+
+
+compile the ui_pub and ui_sub IDL files (UI_pubSub folder):
+----------------------------------------
+
+source the virtual environment if not done,
+	
+	cd IVI_UI/UI_pubSub/
+	pip install .
+	cd ui_pub_sub/build/
+	rm -rf *
+	cmake .. && make -j4 #ignore errors in this step
+	itl2py -o basic_output basic_idl basic.itl
+	cd basic_output
+	basic_idl_DIR=$(realpath ..) pip3 install .
+
+
+For android app connectivity:
+-----------------------------
+Check if mosquitto broker is there else : 
+               sudo apt install mosquitto
+
+
+To run UI,
+----------
+
+Source the python virtual environment created.
+
+run the "start.sh" in the IVI_UI folder.
+
+
+
+
