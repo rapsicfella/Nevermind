@@ -1,0 +1,205 @@
+#k3s installation commands:
+   Install K3S using docker runtime by running the below command:
+
+	curl -sfL https://get.k3s.io | sh -s - --docker --write-kubeconfig-mode 644
+
+On a new terminal run, “sudo k3s server” (if facing localhost:8080 error)
+
+
+# Creating Private Docker Registry:
+-----------------------------------------------------------------------
+path                                    : cd /home
+create registry.yaml file using commnad : sudo nano registry.yaml
+------------------------------------------------------------------------
+copy , paste the below content in registry.yaml file
+
+////////////////
+
+apiVersion: v1
+
+kind: ReplicationController
+
+metadata:
+
+ name: kube-registry-v0
+
+ namespace: kube-system
+
+ labels:
+
+  k8s-app: kube-registry
+
+  version: v0
+
+spec:
+
+ replicas: 1
+
+ selector:
+
+  k8s-app: kube-registry
+
+  version: v0
+
+ template:
+
+  metadata:
+
+   labels:
+
+    k8s-app: kube-registry
+
+    version: v0
+
+  spec:
+
+   containers:
+
+   - name: registry
+
+     image: registry:2
+
+     resources:
+
+      limits:
+
+       cpu: 100m
+
+       memory: 200Mi
+
+     env:
+
+     - name: REGISTRY_HTTP_ADDR
+
+       value: :5000
+
+     - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
+
+       value: /var/lib/registry
+
+     volumeMounts:
+
+     - name: image-store
+
+       mountPath: /var/lib/registry
+
+     ports:
+
+     - containerPort: 5000
+
+       name: registry
+
+       protocol: TCP
+
+   volumes:
+
+   - name: image-store
+
+     hostPath:
+
+      path: /var/lib/registry-storage
+
+     #emptyDir: {}
+     
+///////////////////
+Now Deploy registry.yaml file,using below command (deploy it in the same directory)
+
+ kubectl apply -f registry.yaml    
+ 
+-------------------------------------------------------------------------------- 
+path                                    : cd /home
+create service.yaml file using command  : sudo nano service.yaml   
+
+copy , paste the below content in service.yaml file
+//////////////
+
+apiVersion: v1
+
+kind: Service
+
+metadata:
+
+ name: kube-registry
+
+ namespace: kube-system
+
+ labels:
+
+  k8s-app: kube-registry
+
+  kubernetes.io/name: "KubeRegistry"
+
+spec:
+
+ selector:
+
+  k8s-app: kube-registry
+
+ ports:
+
+ - name: registry
+
+   port: 5000
+
+   targetPort: 5000
+
+   protocol: TCP
+
+ type: LoadBalancer
+
+///////////
+Now Deploy service.yaml file,using below command (deploy it in the same directory)
+
+ kubectl apply -f service.yaml  
+
+---------------------------------------------------------------------------------
+
+path                                    : cd /etc/docker/
+create daemon.json file using commnad   : sudo nano daemon.json   
+
+copy , paste the below content in daemon.json file
+///////////
+
+{
+
+ "insecure-registries" : ["localhost:5000"]
+
+}
+
+//////////////
+
+------------------------------------------------------------------------------------
+
+path                                      : cd /etc/rancher/k3s/
+create registries.yaml file using commnad :sudo nano registries.yaml   
+
+copy , paste the below content in registries.yaml file
+
+///////
+
+"IP-ADDR-HOST:5000":
+
+   endpoint:
+
+   - "http://localhost:5000" 
+
+
+////////
+------------------------------------------------------------------------------------
+After filling these contents in the respective yaml files,follow the below steps
+
+sudo systemctl restart docker
+
+Confirmation check:
+To push a custom docker image to the registry follow the below steps- (Change IP Addresses if required in pod.yaml, registries.yaml and daemon.json for it to work if DHCP gives new IPs)
+
+	1. docker tag custom-docker-image localhost:5000/CUSTOM_NAME:latest
+
+	2. docker push localhost:5000/CUSTOM_NAME:latest  (if succesfully pushed , then our image is deployable in our docker registry)[You can check with any custom image in yo system]
+
+------------------------------------------------------------------------------------
+ 
+------------------------------------------------------------------------------------
+**********Now Jump to New-Architecture-Steps.txt to install istio, deploy our applications and integrate with istio************************************
+****************************************************************************************************************************************
+

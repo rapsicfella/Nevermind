@@ -1,0 +1,252 @@
+
+#Build all the images
+--------------------------------------------------------------------------------------------------------------------------------------------------	
+cd /sdv-ms
+cd base
+docker build -t base-ms .                #build base image for dds gateway
+
+#Before Building gateway image:	
+In dds_gateway.py:
+
+If using docker run in start script:
+
+     line 28 -   self.VS_UI_EVENT_API_ENDPOINT = 'http://192.168.1.9:5001/videoStreaming/cameraRequest'
+     line 53 -   self.OD_UI_EVENT_API_ENDPOINT = 'http://192.168.1.9:5002/objectDetection/cameraRequest'
+     line 76 -   self.OTA_UI_EVENT_API_ENDPOINT = 'http://192.168.1.9:5003/ota/otaRequest'
+
+If using istio ingress gateway:
+     
+     line 28 -   self.VS_UI_EVENT_API_ENDPOINT = 'http://$GATEWAY_URL/videoStreaming/cameraRequest'
+     line 53 -   self.OD_UI_EVENT_API_ENDPOINT = 'http://$GATEWAY_URL/objectDetection/cameraRequest'
+     line 76 -   self.OTA_UI_EVENT_API_ENDPOINT = 'http://$GATEWAY_URL/ota/otaRequest'
+
+
+Note: 1. here 192.168.1.9 is the host system IPV4(keep yours).
+      2. dds gateway is running on 5020 port of your host system.
+
+cd ../gateway
+docker build -t sdv-dds-gateway .         #build dds gateway image
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+cd ../od-base
+docker build -t od-base .                 #build base image for od
+
+#Before Building od image:
+ In /sdv-ms/od_rest/od/OD_CODE/odapp_rest.py:
+    line 52 - self.OD_CAMFEED_API_ENDPOINT = 'http://192.168.1.9:5020/objectDetection/camFeed' ---> Replace 192.168.1.9 with your host system IP 
+    
+cd ../od_rest
+docker build -t od-ms .                    #build od image
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Before Building vs image:
+ In /sdv-ms/vs_rest/videostreamingapp_rest.py:
+     line 32 - self.VS_CAMFEED_API_ENDPOINT = 'http://192.168.1.9:5020/videoStreaming/camFeed' ---> Replace 192.168.1.9 with your host system IP 
+     
+cd ../vs_rest
+docker build -t vs-ms .                    #build vs image
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Before Building ota image:
+  In /sdv-ms/ota_rest/ota/OTA_code/OTA/ota_app.py:
+     line 31 - self.OTA_RESPONSE_API_ENDPOINT = 'http://192.168.1.9:5020/ota/otaResponse' ---> Replace 192.168.1.9 with your host system IP 
+     
+cd ../ota_rest
+docker build -t ota-ms .                    #build ota image
+--------------------------------------------------------------------------------------------------------------------------------------------------
+==================================================================================================================================================
+#Go to IVI_UI and perform the setup
+
+cd /sdv-ms/IVI_UI/
+
+create python venv:
+-------------------
+ Note: Before creating, Go to sdv-ms/IVI_UI/ and delete pydds folder
+ sudo apt install python3.8-venv
+ python3.8 -m virtualenv pydds  (**pydds is the environment name here and can be changed to different if needed**)
+
+ source pydds/bin/activate		##
+	pip install --upgrade pip
+	pip install wheel numpy opencv-python-headless 
+
+
+compile the ui_pub and ui_sub IDL files (UI_pubSub folder):
+----------------------------------------
+
+source the virtual environment if not done,
+	
+	cd IVI_UI/UI_pubSub/
+	pip install .
+	cd ui_pub_sub/build/
+	rm -rf *
+	cmake .. && make -j4 #ignore errors in this step
+	itl2py -o basic_output basic_idl basic.itl
+	cd basic_output
+	basic_idl_DIR=$(realpath ..) pip3 install .
+	
+--------------------------------------------------------------------------------------------------------------------------------------	
+======================================================================================================================================
+#Installing Istio and Deploying applications:
+
+Prerequisites - k3s
+
+	cd
+	curl -L https://istio.io/downloadIstio | sh -
+	cd istio-1.12.1
+	export PATH=$PWD/bin:$PATH
+	export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+	kubectl config view --raw > ~/.kube/config
+	stioctl install --set profile=demo -y
+	kubectl label namespace default istio-injection=enabled
+--------------------------------------------------------------------------------------------------------------------------------------	
+#Steps to get GATEWAY_URL in current terminal:(Note: Add these steps to ~/.bashrc and do $source ~/.bashrc to not to repeat these steps everytime)
+
+        export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http2")].nodePort}')
+        export SECURE_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="https")].nodePort}')
+        export TCP_INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="tcp")].nodePort}')
+        export INGRESS_HOST=$(kubectl get po -l istio=ingressgateway -n istio-system -o jsonpath='{.items[0].status.hostIP}')
+        export GATEWAY_URL=$INGRESS_HOST:$INGRESS_PORT
+        
+        	confirmation: type "echo $GATEWAY_URL" in terminal
+        		output: 192.168.1.9:30650(Something like this)
+		    
+#Deploy our applications in kubernetes cluster and integrate with istio:
+
+    Prerequisites: Private docker registry(included in k3s steps) (ideally runs on localhost:5000)
+
+#Tag all the images to push to our docker registry:
+    docker tag vs-ms localhost:5000/vs-ms:latest
+    docker tag od-ms localhost:5000/od-ms:latest
+    docker tag ota-ms localhost:5000/ota-ms:latest
+    
+#Push the images to our docker registry:
+    docker push localhost:5000/vs-ms:latest
+    docker push localhost:5000/od-ms:latest
+    docker push localhost:5000/ota-ms:latest
+
+#Now deploy the applications in kubernetes cluster and istio environment:
+	cd /sdv-ms/Deployments/
+	kubectl apply -f vs-deployment.yaml
+	kubectl apply -f od-deployment.yaml
+	kubectl apply -f ota-deployment.yaml
+	kubectl apply -f sdv-gateway.yaml
+	kubectl apply -f DestinationRules.yaml
+	
+Check everything is deployed fine:
+    1. Go to terminal and type - istioctl analyze
+    	confirmation output: ✔ No validation issues found when analyzing namespace: default.
+    	
+    2. Check all deployments and services:
+         Go to terminal and type 
+         	$ kubectl get pods,svc,virtualservice,destinationrules,gateway
+         	
+         	Output:
+			NAME                      READY   STATUS    RESTARTS   AGE
+			pod/ota-6fdcf969f-q2fnw   2/2     Running   6          4d5h
+			pod/od-96f5689df-vph9v    2/2     Running   2          25h
+			pod/vs-57cf9c8dd4-4bcpw   2/2     Running   6          4d5h
+
+			NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+			service/kubernetes   ClusterIP   10.43.0.1       <none>        443/TCP    34d
+			service/vs           ClusterIP   10.43.43.218    <none>        5001/TCP   4d5h
+			service/ota          ClusterIP   10.43.122.254   <none>        5003/TCP   4d5h
+			service/od           ClusterIP   10.43.62.201    <none>        5002/TCP   25h
+
+			NAME                                     GATEWAYS          HOSTS   AGE
+			virtualservice.networking.istio.io/vs    ["sdv-gateway"]   ["*"]   4d20h
+			virtualservice.networking.istio.io/od    ["sdv-gateway"]   ["*"]   4d5h
+			virtualservice.networking.istio.io/ota   ["sdv-gateway"]   ["*"]   4d5h
+
+			NAME                                      HOST   AGE
+			destinationrule.networking.istio.io/ota   ota    4d4h
+			destinationrule.networking.istio.io/vs    vs     4d4h
+			destinationrule.networking.istio.io/od    od     4d4h
+
+			NAME                                      AGE
+			gateway.networking.istio.io/sdv-gateway   4d5h
+--------------------------------------------------------------------------------------------------------------------------------------
+
+#Deploy Addons(ie, kiali, jaeger, grafana and prometheus) for launching dashboards:
+
+	kubectl apply -f ~/istio-1.12.0/samples/addons
+	kubectl rollout status deployment/kiali -n istio-system
+	      #Confirmation Output: deployment "kiali" successfully rolled out
+
+--------------------------------------------------------------------------------------------------------------------------------------	      
+##Last Step(Test the setup and move to this step only if its working) ie, Run start.sh and test the setup before this step.
+	
+#To configure our microservices to talk to only registered services- Create Serviceentry and Egress gateway:
+	Place the ServiceEntry.yaml and Egressgateway.yaml in sdv-ms/Deployments/ folder
+		[Note: change IP to your IP in ServiceEntry.yaml]
+		
+	cd ~/Desktop/sdv-ms/Deployments/
+	
+	First reinstall istio by changing outbound traffic from ALLOW_ANY to REGISTRY_ONLY:
+$ istioctl install --set profile=demo -y --set components.egressGateways[0].name=istio-egressgateway --set components.egressGateways[0].enabled=true  --set         meshConfig.outboundTrafficPolicy.mode=REGISTRY_ONLY
+		
+then,   $ kubectl apply -f ServiceEntry.yaml
+	$ kubectl apply -f Egressgateway.yaml
+	
+--------------------------------------------------------------------------------------------------------------------------------------
+======================================================================================================================================
+ Run Scripts:
+ 
+ Start the Applications:
+ 	cd ~/Desktop/sdv-ms/IVI_UI/
+ 	python3 startup.sh (or) ./start.sh 
+ 	
+ Get the Dashboards:
+ Each one on new terminal:
+ 	istioctl dashboard kiali 
+ 	istioctl dashboard grafana
+ 	istioctl dashboard jaeger
+ 	istioctl dashboard prometheus 
+ 	
+ Check deployment status:
+ 	istioctl analyze     
+ 	
+ 
+ --------------------------------------------------------------------------------------------------------------------------------------
+======================================================================================================================================
+Cleanup all deployments:
+
+	kubectl delete -f vs-deployment.yaml
+	kubectl delete -f od-deployment.yaml
+	kubectl delete -f ota-deployment.yaml 
+	kubectl delete -f sdv-gateway.yaml 
+	kubectl delete -f DestinationRules.yaml
+	kubectl delete -f ServiceEntry.yaml 
+	kubectl delete -f Egressgateway.yaml
+
+
+ --------------------------------------------------------------------------------------------------------------------------------------
+======================================================================================================================================
+References:
+	Github istio - https://github.com/istio/istio
+	Documentation istio - https://istio.io/latest/docs/
+	
+--------------------------------------------------------------------------------------------------------------------------------------
+======================================================================================================================================
+
+Some known Errors:
+	1. istioctl command not found error:-   
+			$ curl -sL https://istio.io/downloadIstioctl | sh -
+                        $ export PATH=$PATH:$HOME/.istioctl/bin
+                               
+                              
+                              
+        2. To get rid od localhost:8080 error while using kubectl:-
+			$ sudo kubectl config view --raw > ~/.kube/config 
+			$ export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+			$ export PATH=$PATH:$HOME/.istioctl/bin
+				Note: if there's no k3s.yaml file in /etc/rancher/k3s/k3s.yaml take from others.
+				
+	3. Upstream TLS expired error while accessing GATEWAY_URl from browser:
+			$ kubectl delete pods --all istio-system
+			
+        4. If any application fails, restart the pods or delete and redeploy the yaml file:
+        		*To restart the pod, Just delete the pod, It automatically restarts  -> $ kubectl delete pod <pod-name> 
+        									[Do $ kubectl get pods for pod-name]
+        		*To redeploy the yaml file, $ kubectl delete -f mydeployment.yaml and again, $ kubectl apply -f mydeployment.yaml							
+        		
+
