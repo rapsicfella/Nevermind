@@ -1,0 +1,76 @@
+Enable ingress gateways - https://istio.io/latest/docs/tasks/traffic-management/ingress/ingress-control/#determining-the-ingress-ip-and-ports
+
+istioctl command not found -   curl -sL https://istio.io/downloadIstioctl | sh -
+                               export PATH=$PATH:$HOME/.istioctl/bin
+
+Patch the master node - kubectl patch node harsha -p "{\"spec\":{\"unschedulable\":false}}"
+
+upstream error:
+ku delete pods --all -n istio-system
+
+
+kubectl logs -l istio=egressgateway -c istio-proxy -n istio-system | tail
+istioctl proxy-config cluster -n istio-system istio-ingressgateway-7d6874b48f-qxhn5
+
+==========================================
+UNINSTALL K3s
+
+sh /usr/local/bin/k3s-killall.sh
+
+sh /usr/local/bin/k3s-uninstall.sh
+
+==========================================
+sudo systemctl status docker
+sudo systemctl restart docker
+docker run --name kubia-container -p 8080:8080 -d kubia
+docker run -it --rm --name kubia-container -p 8080:8080 -d kubia
+  ---port 8080 on host machiene is mapped to port 8080 inside the container and -d means it runs in background
+
+  sudo curl localhost:8080 (to listen to http)
+
+  sudo docker inspect kubia-continer - It gives an entire overview about hostport, network settings and other info of container.
+
+  docker exec -it kubia-container bash (to explore running container)
+
+  ps aux(for all processes)
+
+  to push image to dockerhub - 
+  step 1, docker tag kubia <dockerhub username>/kubia
+  step 2, Login to docker hub - docker login -u <username> -p <password>
+  step 3, docker push <dockerhub username>/kubia
+
+  If a container is running on one port, we cant run another on same port
+
+  **sudo alias k=kubectl (or simply add aliases to bashrc and source that).
+
+  ---To create deployment directly -> kubectl create deployment --image kubia:latest kubia
+
+  ---Create replicas ->  kubectl scale deployment kubia --replicas 3
+  
+  ---To expose the port -> kubectl expose deployment kubia --type=NodePort --port 8080
+
+  ---Additional -> kubectl get pods
+                   kubectl get services
+
+docker rm $(docker ps -a -q) (or) docker rmi -f $(docker images -a -q)
+
+**to stop specific port con -> sudo netstat -lnp | grep 10250
+and kill the process with id
+==================================================================
+**********(To get rid od localhost:8080 error)
+sudo kubectl config view --raw > ~/.kube/config 
+
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+export PATH=$PATH:$HOME/.istioctl/bin
+
+===============================================================
+##Create or load gzip or tar files
+
+kubectl label nodes <your-node-name> disktype=ssd
+kubectl get nodes --show-labels
+
+docker save nginx:alpine > nginx-amd.tar
+docker load -i nginx-amd.tar
+
+docker save od-ms-amd | gzip > od-ms-amd.tar.gz
+docker load < busybox.tar.gz
