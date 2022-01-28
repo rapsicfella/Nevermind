@@ -1,0 +1,43 @@
+1. Istio can run alongside with the kubernetes cluster and help you manage your microservices.
+
+2. Istio, by default blocks all traffic going out of your cluster. It is good for security reasons. ie, you dont want your app talking to random end points on the internet. Istio will be able to         lockdown and only talk to trusted endpoints using egress rules(few lines of YAML).
+
+3. Istio will autmaticatically retry the requests as many times as we want before giving up - Istio will transparantly do manage all these network calls automatically.
+
+4. USE - istioctl (like kubectl).
+
+5. K8s will defaultly use round robin load balancing for its services(ie, it'll bindly send traffic to its pods). *with Istio we can exatly make traffic go where we want(ie,A specific version for specific pod).
+
+6. Istio will be able to create a full picture of our services (ie, which is talking to which like that). We can also get metrics(ie,volume, latency ) from cluster as well which will be shown on dashboard to understand what is going on on our services.
+
+7. We can use something like zipkin or jaeger to do tracing (ie, communication time and info of microservices). To do this we have to include the trace headers in yaml file.
+
+8. Istio simply reduces the work of a developer.
+
+9. We can also do in-production testing using istio (ie, to separatly test a new version of production alongside the current version without any traffic hitting) ie, canary routing, the super-secret traffic like we mentioned in yaml goes to canary service. we can route to 900th service in 2000 services using istio by propagating the headers.
+
+10. Others:
+
+Request routing
+Fault injection
+Traffic shifting
+Querying metrics
+Visualizing metrics
+Accessing external services
+Visualizing your mesh
+
+Focussed canary testing:
+As mentioned above, the Istio routing rules can be used to route traffic based on specific criteria, allowing more sophisticated canary deployment scenarios. Say, for example, instead of exposing the canary to an arbitrary percentage of users, we want to try it out on internal users, maybe even just a percentage of them. The following command could be used to send 50% of traffic from users at some-company-name.com to the canary version, leaving all other users unaffected.
+
+
+##http blog
+https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa
+
+So Grafana, As the name suggests this is the graphical representation of data. This tool helps us study, analyse & monitor data over a period of time, technically called time series analytics. It helps us track the user behaviour, application behaviour, frequency of errors popping up in production.
+
+Jaeger is open source software and it is an end-to-end distributed tracing tool used to track user requests across services in microservice architecture. We can troubleshoot things like performance and we can work on latency optimization, root cause analysis, service dependency analysis.
+
+On the other hand, Prometheus is a time-series metrics monitoring tool used to track metrics like resource usage. metrics information is stored with the timestamp at which it was recorded, alongside optional key-value pairs called labels.
+--Reliable, stand alone AND SELF containing, Works even if other parts of infrastructure is broke, and less complex. Can be deployed easity in container environents.
+
+Kiali is an observability console for Istio with service mesh configuration and validation capabilities. It helps you understand the structure and health of your service mesh by monitoring traffic flow.
