@@ -1,0 +1,61 @@
+
+How to install istion on Jetson ( https://github.com/istio/istio/issues/21094 - see comment by jxlwqq on  Nov 1, 2021) :-----------
+
+On terminal 1 -
+***************
+
+curl -sL https://istio.io/downloadIstioctl | sh -
+export PATH=$PATH:$HOME/.istioctl/bin
+istioctl proxy-status
+istioctl operator init --hub=docker.io/querycapistio --tag=1.9.2
+kubectl create ns istio-system
+
+kubectl apply -f - <<EOF
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: example-istiocontrolplane
+spec:
+  hub: docker.io/querycapistio
+  profile: demo
+EOF
+
+istioctl install --set hub=docker.io/querycapistio --set profile=demo -y
+
+while above is running, on another terminal 2 apply folowing patch -
+********************************************************************
+kubectl patch deployments.apps \
+  istio-ingressgateway \
+  --namespace istio-system \
+  --type='json' \
+  -p='[
+  {"op": "replace", "path": "/spec/template/spec/affinity/nodeAffinity/preferredDuringSchedulingIgnoredDuringExecution/0/preference/matchExpressions/0/values", "value": [amd64,arm64]},
+  {"op": "replace", "path": "/spec/template/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms/0/matchExpressions/0/values", "value": [amd64,arm64,ppc64le,s390x]}
+  ]'
+  
+kubectl patch deployments.apps \
+  istio-egressgateway \
+  --namespace istio-system \
+  --type='json' \
+  -p='[
+  {"op": "replace", "path": "/spec/template/spec/affinity/nodeAffinity/preferredDuringSchedulingIgnoredDuringExecution/0/preference/matchExpressions/0/values", "value": [amd64,arm64]},
+  {"op": "replace", "path": "/spec/template/spec/affinity/nodeAffinity/requiredDuringSchedulingIgnoredDuringExecution/nodeSelectorTerms/0/matchExpressions/0/values", "value": [amd64,arm64,ppc64le,s390x]}
+  ]'
+  
+On terminal 1 - istioctl install --set hub=docker.io/querycapistio --set profile=demo -y would complete successfully
+***************
+✔ Istio core installed
+✔ Istiod installed
+✔ Ingress gateways installed
+✔ Egress gateways installed
+✔ Installation complete
+
+
+Check istio installation -
+
+kubectl -n istio-system get deploy
+istioctl profile list
+
+
+kubectl label namespace default istio-injection=enabled
