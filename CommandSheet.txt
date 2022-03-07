@@ -57,12 +57,11 @@ docker rm $(docker ps -a -q) (or) docker rmi -f $(docker images -a -q)
 **to stop specific port con -> sudo netstat -lnp | grep 10250
 and kill the process with id
 ==================================================================
-**********(To get rid od localhost:8080 error)
-sudo kubectl config view --raw > ~/.kube/config 
+##To get rid od localhost:8080 error)
 
+sudo kubectl config view --raw > ~/.kube/config 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 export PATH=$PATH:$HOME/.istioctl/bin
-
 ===============================================================
 ##Create or load gzip or tar files
 
@@ -78,22 +77,47 @@ docker load < busybox.tar.gz
 Add stress to system cpu cores:
 sudo apt install stress
 stress --vm 4 --vm-bytes 1024M --timeout 60
-=====================================================
-Make pod priority:
+=========================================================
 
-apiVersion: scheduling.k8s.io/v1
+#INSTALL-DOCKER
+sudo apt install apt-transport-https ca-certificates curl software-properties-common 
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - 
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable" 
+sudo apt update 
+sudo apt install docker-ce 
+sudo usermod -aG docker ${USER} 
+su - ${USER} 
+-------------------------------------------------------------
+#PATCH_DEPLOYMENT_FILE
+kubectl patch deployment myapp-deployment -p \
+  '{"apiVersion": "v1"}'
+ ------------------------------------------------------
+host_ip=os.environ["HOST_IP"]
+host_endpoint='http://'+host_ip+':5020/HVACWRITE
+-----------------------------------------------
+#MANIFESTATION
+export DOCKER_CLI_EXPERIMENTAL=enabled
+docker manifest create --insecure localhost:5000/hvac-manifest-new localhost:5000/hvac-ms localhost:5000/hvac-ms-amd:latest 
+docker manifest push --insecure localhost:5000/ota-manifest-new:v1
+----------------------------------------------
 
-kind: PriorityClass
+Install kubectl:
 
-metadata:
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+echo "$(<kubectl.sha256)  kubectl" | sha256sum --check
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+kubectl version --client
+ ----------------------------------------------
+ Prometheus dashboard in grafana - 3119
+ --------------------------------------------
+##INSTALL-ISTIO
+curl -L https://istio.io/downloadIstio | sh -
+cd istio-1.12.1
+export PATH=$PWD/bin:$PATH
+istioctl install --set profile=demo -y
+kubectl label namespace default istio-injection=enabled
 
-  name: high-priority
-
-value: 1000000
-
-globalDefault: false
-
-description: "This priority class should be used for XYZ service pods only."
-
- priorityClassName: high-priority
-
+#FOR REGISTRY ONLY
+istioctl install --set profile=demo -y --set components.egressGateways[0].name=istio-egressgateway --set components.egressGateways[0].enabled=true  --set meshConfig.outboundTrafficPolicy.mode=REGISTRY_ONLY
+-----------------------------------------
